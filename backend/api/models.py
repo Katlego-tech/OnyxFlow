@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser, Permission, Group
 
 class User(AbstractUser):
     ROLE_CHOICES = (
+        ('admin', 'Admin'),
         ('coach', 'Coach'),
         ('player', 'Player'),
     )
@@ -38,16 +39,24 @@ class PlayerProfile(models.Model):
 
 class Team(models.Model):
     name = models.CharField(max_length=120)
-    coach = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='teams'
+
+    admin_owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='owned_teams'
     )
+
+    current_coach = models.ForeignKey(
+        User, on_delete=models.SET_NULL, related_name='coached_teams',
+        null=True, blank=True
+    )
+
     players = models.ManyToManyField(
         PlayerProfile, related_name='teams', blank=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} ({self.coach.username})"
+        coach_name = self.current_coach.username if self.current_coach else "Unassigned"
+        return f"{self.name} (Coach: {coach_name} | Owner: {self.admin_owner.username})"
 
 
 class TrainingSession(models.Model):

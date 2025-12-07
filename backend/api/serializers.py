@@ -4,7 +4,6 @@ from .models import User, PlayerProfile, TrainingSession, Team
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
-# Use get_user_model() in production code for robustness
 User = get_user_model()
 
 
@@ -48,6 +47,11 @@ class CoachRegisterSerializer(BaseRegisterSerializer):
         return self.create_user_with_role(validated_data, role='coach')
 
 
+class AdminRegisterSerializer(BaseRegisterSerializer):
+    def create(self, validated_data):
+        return self.create_user_with_role(validated_data, role='admin')
+
+
 class RegisterResponseSerializer(serializers.Serializer):
     user = UserSerializer()
     access = serializers.CharField()
@@ -59,7 +63,7 @@ class PlayerSelfSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PlayerProfile
-        fields = ['id', 'user', 'height', 'team_name']  # Added 'id' for R/U/D operations
+        fields = ['id', 'user', 'height', 'team_name']
 
 
 class PlayerPublicSerializer(serializers.ModelSerializer):
@@ -71,30 +75,36 @@ class PlayerPublicSerializer(serializers.ModelSerializer):
 
 
 class TeamReadSerializer(serializers.ModelSerializer):
-    coach = UserSerializer()
+    admin_owner = UserSerializer(read_only=True)
+    current_coach = UserSerializer(allow_null=True)
     players = PlayerPublicSerializer(many=True)
 
     class Meta:
         model = Team
-        fields = ['id', 'name', 'coach', 'players', 'created_at']
+        fields = ['id', 'name', 'admin_owner', 'current_coach', 'players', 'created_at']
 
 
 class TeamWriteSerializer(serializers.ModelSerializer):
+    current_coach = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(role='coach'), required=False, allow_null=True
+    )
     players = serializers.PrimaryKeyRelatedField(
         many=True, queryset=PlayerProfile.objects.all(), required=False
     )
 
     class Meta:
         model = Team
-        fields = ['id', 'name', 'players']
+        fields = ['id', 'name', 'current_coach', 'players']
 
     def create(self, validated_data):
         players = validated_data.pop('players', [])
+        current_coach = validated_data.pop('current_coach', None)
 
-        coach = self.context['request'].user
+        admin_owner = self.context['request'].user
 
         team = Team.objects.create(
-            coach=coach,
+            admin_owner=admin_owner,
+            current_coach=current_coach,
             **validated_data
         )
 
@@ -128,12 +138,13 @@ class TrainingWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TrainingSession
-        fields = ['id' , 'players', 'team', 'focus', 'duration_minutes']
+        fields = ['id', 'players', 'team', 'focus', 'duration_minutes']
 
     def validate_team(self, value):
         request = self.context['request']
-        if value and value.coach != request.user:
-            raise serializers.ValidationError("You can only assign sessions to your own teams.")
+        # Check if the user is the stable admin_owner of the team they are assigning
+        if value and value.admin_owner != request.user:
+            raise serializers.ValidationError("You can only assign sessions to teams you own.")
         return value
 
     def create(self, validated_data):

@@ -1,4 +1,22 @@
 {
+    "REGISTER_ADMIN": {
+        "status": 201,
+        "request": {
+            "username": "admin1",
+            "email": "admin1@test.com",
+            "password": "StrongPass123!",
+            "password2": "StrongPass123!"
+        },
+        "response": {
+            "user": {
+                "id": 1,
+                "username": "admin1",
+                "role": "admin"
+            },
+            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NTIxNzEwNCwiaWF0IjoxNzY1MTMwNzA0LCJqdGkiOiI1MDA1ZjU1OTljZDA0OTFiODI2NGY4YTJhMmUwZjA4YyIsInVzZXJfaWQiOiIxIn0.TvK1kwAv4LjmxgTafKPg9Rvx3Jnc9Jvw3UiSGGLsF7g",
+            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MTMyNTA0LCJpYXQiOjE3NjUxMzA3MDQsImp0aSI6ImVkYzQ0NTI5NjVhYTQ4ODg4NGUxMjE1MDBmZDcxOTdkIiwidXNlcl9pZCI6IjEifQ.opzB9VMK95o9cJbaoKJU3iyfbmpii5IKgN5hJmJO8V4"
+        }
+    },
     "REGISTER_COACH": {
         "status": 201,
         "request": {
@@ -9,12 +27,12 @@
         },
         "response": {
             "user": {
-                "id": 1,
+                "id": 2,
                 "username": "coach1",
                 "role": "coach"
             },
-            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NTE5MDgzNSwiaWF0IjoxNzY1MTA0NDM1LCJqdGkiOiI4NTA2NjE3YTFkNjA0NzczYjgyYmJjZjRkMzJhMzM1YiIsInVzZXJfaWQiOiIxIn0.eX_hbaSdL6B7NZRoVuuv9jy0vjfZGsvt1Hw_r1yOdqs",
-            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MTA2MjM1LCJpYXQiOjE3NjUxMDQ0MzUsImp0aSI6IjExNTkzMTZmNTAzMDRhNzc5YTYxM2FmNGFhYzNkOTE3IiwidXNlcl9pZCI6IjEifQ.3x8zYic32yiWJGrfo5IC2fkWCS5jwLiDspR94isgIGk"
+            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NTIxNzEwNSwiaWF0IjoxNzY1MTMwNzA1LCJqdGkiOiJlMTRiNTA3ZTU1NWM0NDU2YWI2MTc2NjU3YWU3MzgwNSIsInVzZXJfaWQiOiIyIn0.Bgfcd0ih7U8U5PJ_9cNZBBm-o3vJ9eQp1GAQf0Mgcx4",
+            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MTMyNTA1LCJpYXQiOjE3NjUxMzA3MDUsImp0aSI6ImZhNTdhYWFlM2U5NjQ1ZWE4YjFmOWZkOWNlM2I2MzdhIiwidXNlcl9pZCI6IjIifQ.y8YW4kq23Rk6U6UJ6SlMkJd01lOJf5Wg5cmd2_LBIf0"
         }
     },
     "REGISTER_PLAYER": {
@@ -27,12 +45,12 @@
         },
         "response": {
             "user": {
-                "id": 2,
+                "id": 3,
                 "username": "player1",
                 "role": "player"
             },
-            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NTE5MDgzNiwiaWF0IjoxNzY1MTA0NDM2LCJqdGkiOiJkYmE4ZDEyMGI1YjE0OGRiYWY3MWNmYWE1ZjU5ZmIxNyIsInVzZXJfaWQiOiIyIn0.g9s0vGmKRGje1GcJxuR_tj52gyv2j8aPbjTVoa-YFrw",
-            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MTA2MjM2LCJpYXQiOjE3NjUxMDQ0MzYsImp0aSI6IjIxOGJiM2VlNmEzYTQ3OWY4NmYwYzY0NjhlYjM4ODM5IiwidXNlcl9pZCI6IjIifQ.cFjpcHg0B3FRkI2S3wNd0HQFWTYijdS_pYxhHBILcmE"
+            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NTIxNzEwNywiaWF0IjoxNzY1MTMwNzA3LCJqdGkiOiJlM2U0OTM0OGFmZTM0MTZlODUxNzhkODY2ZTM4ZTAwOSIsInVzZXJfaWQiOiIzIn0.TyIdNxcvo5OuOVkeRDTKFXoOCXemO38H2LuFTQ9ZI_c",
+            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MTMyNTA3LCJpYXQiOjE3NjUxMzA3MDcsImp0aSI6ImY4ZmJmMGYzNGQxNTQ4N2RhMzk0YWQ5MDQ0NjZhZTg3IiwidXNlcl9pZCI6IjMifQ.9Nr63JnBRCAuhvsuOLBgmeAb9zoXqQYbAZx5-j61Q40"
         }
     },
     "CREATE_PLAYER_PROFILE": {
@@ -45,7 +63,7 @@
         "response": {
             "id": 1,
             "user": {
-                "id": 2,
+                "id": 3,
                 "username": "player1",
                 "role": "player"
             },
@@ -53,18 +71,20 @@
             "team_name": "Unassigned"
         }
     },
-    "CREATE_TEAM": {
+    "CREATE_TEAM_BY_ADMIN": {
         "status": 201,
         "request": {
-            "name": "U18 A Team"
+            "name": "U18 Admin Owned Team",
+            "current_coach": 2
         },
         "response": {
             "id": 1,
-            "name": "U18 A Team",
+            "name": "U18 Admin Owned Team",
+            "current_coach": 2,
             "players": []
         }
     },
-    "CREATE_SESSION": {
+    "CREATE_SESSION_BY_ADMIN": {
         "status": 201,
         "request": {
             "focus": "Speed & Agility",
@@ -96,33 +116,6 @@
             "duration_minutes": 60
         }
     },
-    "EDIT_SESSION": {
-        "status": 200,
-        "request": {
-            "focus": "Advanced Speed Training (Updated)",
-            "duration_minutes": 90,
-            "team": 1
-        },
-        "response": {
-            "id": 1,
-            "players": [
-                1
-            ],
-            "team": 1,
-            "focus": "Advanced Speed Training (Updated)",
-            "duration_minutes": 90
-        }
-    },
-    "PLAYER_ME": {
-        "status": 404,
-        "request": null,
-        "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n  <title>Page not found at /api/players/me/</title>\n  <meta name=\"robots\" content=\"NONE,NOARCHIVE\">\n  <style>\n    html * { padding:0; margin:0; }\n    body * { padding:10px 20px; }\n    body * * { padding:0; }\n    body { font-family: sans-serif; background:#eee; color:#000; }\n    body > :where(header, main, footer) { border-bottom:1px solid #ddd; }\n    h1 { font-weight:normal; margin-bottom:.4em; }\n    h1 small { font-size:60%; color:#666; font-weight:normal; }\n    table { border:none; border-collapse: collapse; width:100%; }\n    td, th { vertical-align:top; padding:2px 3px; }\n    th { width:12em; text-align:right; color:#666; padding-right:.5em; }\n    #info { background:#f6f6f6; }\n    #info ol { margin: 0.5em 4em; }\n    #info ol li { font-family: monospace; }\n    #summary { background: #ffc; }\n    #explanation { background:#eee; border-bottom: 0px none; }\n    pre.exception_value { font-family: sans-serif; color: #575757; font-size: 1.5em; margin: 10px 0 10px 0; }\n  </style>\n</head>\n<body>\n  <header id=\"summary\">\n    <h1>Page not found <small>(404)</small></h1>\n    \n    <table class=\"meta\">\n      <tr>\n        <th scope=\"row\">Request Method:</th>\n        <td>GET</td>\n      </tr>\n      <tr>\n        <th scope=\"row\">Request URL:</th>\n        <td>http://127.0.0.1:8000/api/players/me/</td>\n      </tr>\n      \n    </table>\n  </header>\n\n  <main id=\"info\">\n    \n      <p>\n      Using the URLconf defined in <code>backend.urls</code>,\n      Django tried these URL patterns, in this order:\n      </p>\n      <ol>\n        \n          <li>\n            \n              <code>\n                admin/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api-auth/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/token/\n                [name='token_obtain_pair']\n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/token/refresh/\n                [name='token_refresh']\n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                profiles/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                teams/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                teams/&lt;int:pk&gt;/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                trainings/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                trainings/&lt;int:pk&gt;/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                auth/register/coach/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                auth/register/player/\n                \n              </code>\n            \n          </li>\n        \n      </ol>\n      <p>\n        \n          The current path, <code>api/players/me/</code>,\n        \n        didn\u2019t match any of these.\n      </p>\n    \n  </main>\n\n  <footer id=\"explanation\">\n    <p>\n      You\u2019re seeing this error because you have <code>DEBUG = True</code> in\n      your Django settings file. Change that to <code>False</code>, and Django\n      will display a standard 404 page.\n    </p>\n  </footer>\n</body>\n</html>\n"
-    },
-    "COACH_VIEW_PLAYER": {
-        "status": 404,
-        "request": null,
-        "response": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n  <title>Page not found at /api/players/1/</title>\n  <meta name=\"robots\" content=\"NONE,NOARCHIVE\">\n  <style>\n    html * { padding:0; margin:0; }\n    body * { padding:10px 20px; }\n    body * * { padding:0; }\n    body { font-family: sans-serif; background:#eee; color:#000; }\n    body > :where(header, main, footer) { border-bottom:1px solid #ddd; }\n    h1 { font-weight:normal; margin-bottom:.4em; }\n    h1 small { font-size:60%; color:#666; font-weight:normal; }\n    table { border:none; border-collapse: collapse; width:100%; }\n    td, th { vertical-align:top; padding:2px 3px; }\n    th { width:12em; text-align:right; color:#666; padding-right:.5em; }\n    #info { background:#f6f6f6; }\n    #info ol { margin: 0.5em 4em; }\n    #info ol li { font-family: monospace; }\n    #summary { background: #ffc; }\n    #explanation { background:#eee; border-bottom: 0px none; }\n    pre.exception_value { font-family: sans-serif; color: #575757; font-size: 1.5em; margin: 10px 0 10px 0; }\n  </style>\n</head>\n<body>\n  <header id=\"summary\">\n    <h1>Page not found <small>(404)</small></h1>\n    \n    <table class=\"meta\">\n      <tr>\n        <th scope=\"row\">Request Method:</th>\n        <td>GET</td>\n      </tr>\n      <tr>\n        <th scope=\"row\">Request URL:</th>\n        <td>http://127.0.0.1:8000/api/players/1/</td>\n      </tr>\n      \n    </table>\n  </header>\n\n  <main id=\"info\">\n    \n      <p>\n      Using the URLconf defined in <code>backend.urls</code>,\n      Django tried these URL patterns, in this order:\n      </p>\n      <ol>\n        \n          <li>\n            \n              <code>\n                admin/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api-auth/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/token/\n                [name='token_obtain_pair']\n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/token/refresh/\n                [name='token_refresh']\n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                profiles/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                teams/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                teams/&lt;int:pk&gt;/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                trainings/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                trainings/&lt;int:pk&gt;/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                auth/register/coach/\n                \n              </code>\n            \n          </li>\n        \n          <li>\n            \n              <code>\n                api/\n                \n              </code>\n            \n              <code>\n                auth/register/player/\n                \n              </code>\n            \n          </li>\n        \n      </ol>\n      <p>\n        \n          The current path, <code>api/players/1/</code>,\n        \n        didn\u2019t match any of these.\n      </p>\n    \n  </main>\n\n  <footer id=\"explanation\">\n    <p>\n      You\u2019re seeing this error because you have <code>DEBUG = True</code> in\n      your Django settings file. Change that to <code>False</code>, and Django\n      will display a standard 404 page.\n    </p>\n  </footer>\n</body>\n</html>\n"
-    },
     "PLAYER_CREATE_TRAINING_SHOULD_FAIL": {
         "status": 403,
         "request": {
@@ -130,7 +123,7 @@
             "duration_minutes": 10
         },
         "response": {
-            "detail": "Only coaches can create sessions."
+            "detail": "You do not have permission to perform this action."
         }
     },
     "DELETE_SESSION": {

@@ -1,33 +1,34 @@
 from rest_framework import permissions
 
 
-class IsCoach(permissions.BasePermission):
-    """Allows access only if the user is authenticated and has the 'coach' role."""
+class IsAdminOrCoach(permissions.BasePermission):
+    """Allows access if the user is authenticated and has the 'admin' or 'coach' role."""
 
     def has_permission(self, request, view):
-        # We assume the view's permission_classes already checked is_authenticated
-        return bool(request.user.role == 'coach')
+        user = request.user
+        return bool(user and user.is_authenticated and user.role in ['admin', 'coach'])
 
 
-class IsTeamCoach(permissions.BasePermission):
-    """Allows access only if the user is the coach of the object (Team)."""
+class IsTeamOwner(permissions.BasePermission):
+    """Allows modification only if the user is the stable team owner (admin_owner)."""
 
     def has_object_permission(self, request, view, obj):
-        # Allow any authenticated user to read (GET, HEAD, OPTIONS)
         if request.method in permissions.SAFE_METHODS:
             return True
-        return obj.coach == request.user
+
+        return obj.admin_owner == request.user
 
 
-class IsCoachOrAssignedPlayer(permissions.BasePermission):
+class IsAdminCoachOrAssignedPlayer(permissions.BasePermission):
     """
-    Allows Coach full access, and allows assigned Player read-only access to the object (TrainingSession).
+    Allows Admin/Coach full access, and allows assigned Player read-only access to the object.
+    (Used for Training Sessions)
     """
 
     def has_object_permission(self, request, view, obj):
         user = request.user
 
-        if user.role == 'coach':
+        if user.role in ['admin', 'coach']:
             return True
 
         if user.role == 'player':

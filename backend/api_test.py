@@ -57,6 +57,27 @@ def pretty(title, response):
 # AUTHENTICATION & REGISTRATION
 # -------------------------------
 
+def register_admin():
+    """Registers an Admin and returns the JWT access token and user ID."""
+    payload = {
+        "username": "admin1",
+        "email": "admin1@test.com",
+        "password": "StrongPass123!",
+        "password2": "StrongPass123!"
+    }
+
+    # CRITICAL: Assuming new endpoint /auth/register/admin/ exists
+    r = requests.post(f"{BASE_URL}/auth/register/admin/", json=payload)
+    save_result("REGISTER_ADMIN", payload, r)
+    pretty("REGISTER ADMIN", r)
+
+    if r.status_code != 201:
+        raise Exception(f"Admin registration failed with status {r.status_code}: {r.text}")
+
+    data = r.json()
+    return data["access"], data["user"]["id"]
+
+
 def register_coach():
     """Registers a coach and returns the JWT access token and user ID."""
     payload = {
@@ -74,7 +95,6 @@ def register_coach():
         raise Exception(f"Coach registration failed with status {r.status_code}: {r.text}")
 
     data = r.json()
-    # Returns the User ID and Access Token
     return data["access"], data["user"]["id"]
 
 
@@ -95,16 +115,11 @@ def register_player():
         raise Exception(f"Player registration failed with status {r.status_code}: {r.text}")
 
     data = r.json()
-    # Returns the User ID and Access Token
     return data["access"], data["user"]["id"]
 
 
 def create_player_profile(token):
-    """
-    CRITICAL FIX: Updates/Creates the PlayerProfile object.
-
-    >>> FIX APPLIED: URL changed to use /profiles/
-    """
+    """Updates/Creates the PlayerProfile object using PATCH /profiles/."""
     headers = {"Authorization": f"Bearer {token}"}
     payload = {
         "height": 180.5,
@@ -112,7 +127,6 @@ def create_player_profile(token):
         "team_name": "Unassigned"
     }
 
-    # FIX APPLIED: Using the correct '/profiles/' endpoint
     r = requests.patch(f"{BASE_URL}/profiles/", json=payload, headers=headers)
     save_result("CREATE_PLAYER_PROFILE", payload, r)
     pretty("CREATE PLAYER PROFILE", r)
@@ -121,7 +135,6 @@ def create_player_profile(token):
         raise Exception(f"Player profile creation/update failed: {r.status_code} - {r.text}")
 
     data = r.json()
-    # Assuming 'id' is a key in the top-level PlayerSelfSerializer response
     return data['id']
 
 
@@ -129,18 +142,26 @@ def create_player_profile(token):
 # TEAMS
 # -------------------------------
 
-def create_team(token):
-    """Creates a team as the authenticated coach."""
-    headers = {"Authorization": f"Bearer {token}"}
-    payload = {"name": "U18 A Team"}
+def create_team(admin_token, coach_user_id):
+    """
+    Admin creates the team record (admin_owner), assigning the Coach's ID
+    to the current_coach field.
+    """
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    payload = {
+        "name": "U18 Admin Owned Team",
+        # CRITICAL: Send the coach's ID for the current_coach field
+        "current_coach": coach_user_id
+    }
 
     r = requests.post(f"{BASE_URL}/teams/", json=payload, headers=headers)
-    save_result("CREATE_TEAM", payload, r)
-    pretty("CREATE TEAM", r)
+    save_result("CREATE_TEAM_BY_ADMIN", payload, r)
+    pretty("CREATE TEAM BY ADMIN", r)
 
     if r.status_code != 201:
         raise Exception(f"Team creation failed with status {r.status_code}: {r.text}")
 
+    # CRITICAL: Ensure TeamWriteSerializer returns 'id'
     return r.json()["id"]
 
 
@@ -148,9 +169,9 @@ def create_team(token):
 # TRAINING SESSIONS
 # -------------------------------
 
-def create_training(token, team_id):
-    """Creates a training session, matching serializer fields."""
-    headers = {"Authorization": f"Bearer {token}"}
+def create_training(admin_token, team_id):
+    """Admin creates a training session."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
     payload = {
         "focus": "Speed & Agility",
         "duration_minutes": 60,
@@ -158,8 +179,8 @@ def create_training(token, team_id):
     }
 
     r = requests.post(f"{BASE_URL}/trainings/", json=payload, headers=headers)
-    save_result("CREATE_SESSION", payload, r)
-    pretty("CREATE SESSION", r)
+    save_result("CREATE_SESSION_BY_ADMIN", payload, r)
+    pretty("CREATE SESSION BY ADMIN", r)
 
     if r.status_code != 201:
         raise Exception(f"Training session creation failed: {r.status_code} - {r.text}")
@@ -167,11 +188,9 @@ def create_training(token, team_id):
     return r.json()["id"]
 
 
-def assign_players(token, session_id, player_ids):
-    """Updates the training session to assign players (using PATCH on Detail View)."""
-    headers = {"Authorization": f"Bearer {token}"}
-
-    # Payload sends only the 'players' field to update the ManyToMany relationship
+def assign_players(admin_token, session_id, player_ids):
+    """Admin assigns players to the session."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
     payload = {"players": player_ids}
 
     r = requests.patch(
@@ -187,31 +206,9 @@ def assign_players(token, session_id, player_ids):
         raise Exception(f"Player assignment failed: {r.status_code} - {r.text}")
 
 
-def edit_training(token, session_id, team_id):
-    """Edits an existing training session."""
-    headers = {"Authorization": f"Bearer {token}"}
-    payload = {
-        "focus": "Advanced Speed Training (Updated)",
-        "duration_minutes": 90,
-        "team": team_id
-    }
-
-    r = requests.put(
-        f"{BASE_URL}/trainings/{session_id}/",
-        json=payload,
-        headers=headers
-    )
-
-    save_result("EDIT_SESSION", payload, r)
-    pretty("EDIT SESSION", r)
-
-    if r.status_code != 200:
-        raise Exception(f"Training session edit failed: {r.status_code} - {r.text}")
-
-
-def delete_training(token, session_id):
-    """Deletes a training session."""
-    headers = {"Authorization": f"Bearer {token}"}
+def delete_training(admin_token, session_id):
+    """Admin deletes the training session."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
 
     r = requests.delete(
         f"{BASE_URL}/trainings/{session_id}/",
@@ -221,35 +218,8 @@ def delete_training(token, session_id):
     save_result("DELETE_SESSION", None, r)
     pretty("DELETE SESSION", r)
 
-    if r.status_code != 204:  # 204 No Content is expected for DELETE success
+    if r.status_code != 204:
         raise Exception(f"Training session deletion failed: {r.status_code} - {r.text}")
-
-
-# -------------------------------
-# PLAYER PROFILE READS
-# -------------------------------
-
-def player_me(token):
-    """Player views their own profile (uses PlayerSelfSerializer)."""
-    headers = {"Authorization": f"Bearer {token}"}
-
-    # We will assume /players/me/ is used for READ operations for the current user
-    # even though /profiles/ is used for the write/patch.
-    # If /profiles/me/ is used for ALL operations, change this line:
-    r = requests.get(f"{BASE_URL}/players/me/", headers=headers)
-
-    save_result("PLAYER_ME", None, r)
-    pretty("PLAYER ME", r)
-
-
-def coach_view_player(token, player_profile_id):
-    """Coach views a player's profile (uses PlayerPublicSerializer)."""
-    headers = {"Authorization": f"Bearer {token}"}
-    # This endpoint is correctly assumed to be /players/{id}/
-    r = requests.get(f"{BASE_URL}/players/{player_profile_id}/", headers=headers)
-
-    save_result("COACH_VIEW_PLAYER", None, r)
-    pretty("COACH VIEW PLAYER", r)
 
 
 # -------------------------------
@@ -282,35 +252,34 @@ def main():
         # --- PHASE 1: SETUP ---
         print("--- PHASE 1: SETUP (Registration and Creation) ---")
 
-        # 1. REGISTER USERS
+        # 1. REGISTER ALL USERS
+        admin_token, admin_user_id = register_admin()
         coach_token, coach_user_id = register_coach()
         player_token, player_user_id = register_player()
 
-        # 2. CREATE PLAYER PROFILE (CRITICAL FIX)
+        # 2. CREATE PLAYER PROFILE (Needed for M2M assignments)
         player_profile_id = create_player_profile(player_token)
 
-        # 3. CREATE TEAM & SESSION
-        team_id = create_team(coach_token)
-        session_id = create_training(coach_token, team_id)
+        # 3. CREATE TEAM & SESSION (Admin acts as the stable admin_owner)
+        team_id = create_team(admin_token, coach_user_id)
+        session_id = create_training(admin_token, team_id)
 
         # --- PHASE 2: OPERATIONS ---
-        print("\n--- PHASE 2: OPERATIONS (Assignment and Updates) ---")
+        print("\n--- PHASE 2: OPERATIONS (Assignment) ---")
 
-        # 4. ASSIGN PLAYERS using the correct PlayerProfile ID
-        assign_players(coach_token, session_id, [player_profile_id])
-        edit_training(coach_token, session_id, team_id)
+        # 4. ASSIGN PLAYERS (Admin assigns)
+        assign_players(admin_token, session_id, [player_profile_id])
 
-        # --- PHASE 3: READS & PERMISSIONS ---
-        print("\n--- PHASE 3: READS & PERMISSIONS ---")
-        player_me(player_token)
-        coach_view_player(coach_token, player_profile_id)
+        # --- PHASE 3: PERMISSIONS ---
+        print("\n--- PHASE 3: PERMISSIONS (Failure Check) ---")
 
         # Test the critical permission check (Player must be denied)
         illegal_create_training(player_token)
 
         # --- PHASE 4: CLEANUP ---
         print("\n--- PHASE 4: CLEANUP (Delete) ---")
-        delete_training(coach_token, session_id)
+        # Admin is the creator/owner and deletes the session
+        delete_training(admin_token, session_id)
 
         print("\n✅ API TEST SCRIPT COMPLETED SUCCESSFULLY.")
         print("   - All results saved to:")

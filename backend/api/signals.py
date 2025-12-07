@@ -9,19 +9,17 @@ User = get_user_model()
 
 @receiver(post_save, sender=User)
 def create_player_profile(sender, instance, created, **kwargs):
-
+    """Handles initial creation of PlayerProfile when a new User is created."""
     if created and instance.role == 'player':
         PlayerProfile.objects.create(user=instance)
 
 
 @receiver(post_save, sender=User)
 def save_player_profile(sender, instance, **kwargs):
+    """Handles saving the profile anytime the User is saved (after initial creation)."""
     if instance.role == 'player':
         if hasattr(instance, 'playerprofile'):
             try:
-                profile = instance.playerprofile
-
-
-                profile.save()
+                instance.playerprofile.save()
             except PlayerProfile.DoesNotExist:
                 pass
