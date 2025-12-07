@@ -14,7 +14,7 @@ class User(AbstractUser):
         verbose_name='user permissions',
         blank=True,
         help_text='Specific permissions for this user.',
-        related_name='api_user_permissions',  # Must be unique
+        related_name='api_user_permissions',
     )
 
     groups = models.ManyToManyField(
@@ -22,19 +22,18 @@ class User(AbstractUser):
         verbose_name='groups',
         blank=True,
         help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
-        related_name='api_user_groups',  # Must be unique
+        related_name='api_user_groups',
     )
 
 
 class PlayerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    height = models.FloatField()
-    rating = models.IntegerField()
-    team_name = models.CharField(max_length=100)
+    height = models.FloatField(null=True, blank=True)
+    rating = models.IntegerField(null=True, blank=True)
+    team_name = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.user.username
-
 
 
 class Team(models.Model):

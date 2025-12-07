@@ -1,23 +1,39 @@
-from rest_framework.permissions import BasePermission
+from rest_framework import permissions
 
 
-class IsCoach(BasePermission):
+class IsCoach(permissions.BasePermission):
+    """Allows access only if the user is authenticated and has the 'coach' role."""
+
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and request.user.role == 'coach')
+        # We assume the view's permission_classes already checked is_authenticated
+        return bool(request.user.role == 'coach')
 
 
-class IsCoachOrAssignedPlayer(BasePermission):
+class IsTeamCoach(permissions.BasePermission):
+    """Allows access only if the user is the coach of the object (Team)."""
+
     def has_object_permission(self, request, view, obj):
-        if request.user.role == 'coach':
+        # Allow any authenticated user to read (GET, HEAD, OPTIONS)
+        if request.method in permissions.SAFE_METHODS:
             return True
-        # obj is TrainingSession or Team depending on view; handle training sessions here
-        try:
-            # for TrainingSession objects
-            return obj.players.filter(user=request.user).exists()
-        except Exception:
-            return False
-
-
-class IsTeamCoach(BasePermission):
-    def has_object_permission(self, request, view, obj):
         return obj.coach == request.user
+
+
+class IsCoachOrAssignedPlayer(permissions.BasePermission):
+    """
+    Allows Coach full access, and allows assigned Player read-only access to the object (TrainingSession).
+    """
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+
+        if user.role == 'coach':
+            return True
+
+        if user.role == 'player':
+            if request.method in permissions.SAFE_METHODS:
+                return obj.players.filter(user=user).exists()
+            else:
+                return False
+
+        return False

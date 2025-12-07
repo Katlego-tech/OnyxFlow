@@ -1,3 +1,4 @@
+from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -5,7 +6,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 from rest_framework.generics import (
-    ListAPIView,
     RetrieveUpdateDestroyAPIView,
     ListCreateAPIView,
 )
@@ -16,7 +16,6 @@ from rest_framework import status
 from .models import PlayerProfile, Team, TrainingSession
 from .serializers import (
     PlayerSelfSerializer,
-    PlayerPublicSerializer,
     TeamReadSerializer,
     TeamWriteSerializer,
     PlayerTrainingSerializer,
@@ -24,24 +23,22 @@ from .serializers import (
     TrainingWriteSerializer,
     CoachRegisterSerializer,
     PlayerRegisterSerializer,
-    RegisterResponseSerializer,
     UserSerializer,
 )
-from .permissions import IsCoach, IsCoachOrAssignedPlayer, IsTeamCoach
+from .permissions import IsCoachOrAssignedPlayer, IsTeamCoach
 
 
-class PlayerProfileView(ListAPIView):
+class PlayerProfileView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = PlayerSelfSerializer
+    queryset = PlayerProfile.objects.all()
 
-    def get_queryset(self):
-        if self.request.user.role == 'coach':
-            return PlayerProfile.objects.all()
-        return PlayerProfile.objects.filter(user=self.request.user)
-
-    def get_serializer_class(self):
-        if self.request.user.role == 'coach':
-            return PlayerPublicSerializer
-        return PlayerSelfSerializer
+    def get_object(self):
+        user = self.request.user
+        try:
+            return user.playerprofile
+        except PlayerProfile.DoesNotExist:
+             raise Http404
 
 
 class CoachRegisterView(APIView):
@@ -80,7 +77,6 @@ class PlayerRegisterView(APIView):
 
 class TeamListCreateView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = TeamReadSerializer  # default for GET
 
     def get_queryset(self):
         user = self.request.user
@@ -120,7 +116,6 @@ class TrainingListCreateView(ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.role == 'coach':
-            # coaches see sessions they created or sessions for their teams
             return TrainingSession.objects.filter(created_by=user) | TrainingSession.objects.filter(team__coach=user)
         return TrainingSession.objects.filter(players__user=user).distinct()
 
@@ -143,18 +138,18 @@ class TrainingDetailView(RetrieveUpdateDestroyAPIView):
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
-            if self.request.user.role != 'coach':
-                raise PermissionDenied("Only coaches can edit sessions.")
             return TrainingWriteSerializer
 
         if self.request.user.role == 'coach':
             return CoachTrainingSerializer
         return PlayerTrainingSerializer
 
+    def perform_update(self, serializer):
+        if self.request.user.role != 'coach':
+            raise PermissionDenied("Only coaches can edit sessions.")
+        serializer.save()
+
     def perform_destroy(self, instance):
         if self.request.user.role != 'coach':
             raise PermissionDenied("Only coaches can delete sessions.")
         instance.delete()
-
-
-

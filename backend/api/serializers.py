@@ -3,8 +3,8 @@ from .models import User, PlayerProfile, TrainingSession, Team
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from rest_framework_simplejwt.tokens import RefreshToken
 
+# Use get_user_model() in production code for robustness
 User = get_user_model()
 
 
@@ -21,7 +21,8 @@ class BaseRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Passwords do not match.")
         return attrs
 
-    def create_user_with_role(self,validated_data, role):
+    @staticmethod
+    def create_user_with_role(validated_data, role):
         validated_data.pop('password2')
 
         password = validated_data.pop('password')
@@ -42,6 +43,11 @@ class PlayerRegisterSerializer(BaseRegisterSerializer):
         return self.create_user_with_role(validated_data, role='player')
 
 
+class CoachRegisterSerializer(BaseRegisterSerializer):
+    def create(self, validated_data):
+        return self.create_user_with_role(validated_data, role='coach')
+
+
 class RegisterResponseSerializer(serializers.Serializer):
     user = UserSerializer()
     access = serializers.CharField()
@@ -53,7 +59,7 @@ class PlayerSelfSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PlayerProfile
-        fields = ['user', 'height', 'team_name']
+        fields = ['id', 'user', 'height', 'team_name']  # Added 'id' for R/U/D operations
 
 
 class PlayerPublicSerializer(serializers.ModelSerializer):
@@ -77,35 +83,31 @@ class TeamWriteSerializer(serializers.ModelSerializer):
     players = serializers.PrimaryKeyRelatedField(
         many=True, queryset=PlayerProfile.objects.all(), required=False
     )
+
     class Meta:
         model = Team
-        fields = ['name', 'players']
+        fields = ['id', 'name', 'players']
 
     def create(self, validated_data):
         players = validated_data.pop('players', [])
-        team = Team.objects.create(coach=self.context['request'].user, **validated_data)
+
+        coach = self.context['request'].user
+
+        team = Team.objects.create(
+            coach=coach,
+            **validated_data
+        )
+
         if players:
             team.players.set(players)
-        return team
 
-    def update(self, instance, validated_data):
-        players = validated_data.pop('players', None)
-        instance.name = validated_data.get('name', instance.name)
-        if players is not None:
-            instance.players.set(players)
-        instance.save()
-        return instance
+        return team
 
 
 class PlayerTrainingSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrainingSession
         fields = ['id', 'focus', 'duration_minutes', 'created_at']
-
-
-class CoachRegisterSerializer(BaseRegisterSerializer):
-    def create(self, validated_data):
-        return self.create_user_with_role(validated_data, role='coach')
 
 
 class CoachTrainingSerializer(serializers.ModelSerializer):
@@ -126,7 +128,7 @@ class TrainingWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TrainingSession
-        fields = ['players', 'team', 'focus', 'duration_minutes']
+        fields = ['id' , 'players', 'team', 'focus', 'duration_minutes']
 
     def validate_team(self, value):
         request = self.context['request']

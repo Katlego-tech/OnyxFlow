@@ -9,6 +9,7 @@ User = get_user_model()
 
 @receiver(post_save, sender=User)
 def create_player_profile(sender, instance, created, **kwargs):
+
     if created and instance.role == 'player':
         PlayerProfile.objects.create(user=instance)
 
@@ -17,4 +18,10 @@ def create_player_profile(sender, instance, created, **kwargs):
 def save_player_profile(sender, instance, **kwargs):
     if instance.role == 'player':
         if hasattr(instance, 'playerprofile'):
-            instance.playerprofile.save()
+            try:
+                profile = instance.playerprofile
+
+
+                profile.save()
+            except PlayerProfile.DoesNotExist:
+                pass
