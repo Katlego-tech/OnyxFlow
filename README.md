@@ -1,6 +1,6 @@
 # OnyxFlow
 
-# Decoupled Team Management API
+# Decoupled Sports Team Management API
 
 This project is a RESTful API built with Django and Django REST Framework (DRF) designed for organizational administrators, coaches, and athletes to manage teams, schedule training sessions, and track performance metrics. The architecture is fully **decoupled**, making the API the single source of truth for both web and mobile clients. 
 
