@@ -55,6 +55,13 @@ fail=0
 ran=0
 manifests=0
 
+# Packages with no test suite yet, each declared against the task ID that will close
+# the gap: UNTESTED["apps/web"]="T031". Empty by default -- see check_node(). This is
+# the AGENTS.md 2a "explicitly declared stub with a follow-up task" rule, applied to a
+# whole package. An entry here does not make the gate pass quietly; it still reports
+# the gap on every run.
+declare -A UNTESTED=()
+
 say()  { printf '%s\n' "$*"; }
 step() { printf '\n-> %s\n' "$*"; }
 bad()  { printf '!! %s\n' "$*"; }
@@ -168,11 +175,26 @@ check_node() {
   [ -f "$dir/package.json" ] || return 0
   manifests=$((manifests + 1))
 
+  # The package manager is whatever the committed lockfile says it is, not npm by
+  # assumption. Running `npm run build` in a pnpm workspace either fails outright or
+  # silently resolves a different dependency tree than the one that was locked.
+  local pm=npm
+  if   [ -f "$dir/pnpm-lock.yaml" ] || [ -f "$root/pnpm-lock.yaml" ]; then pm=pnpm
+  elif [ -f "$dir/yarn.lock" ]      || [ -f "$root/yarn.lock" ];      then pm=yarn
+  elif [ -f "$dir/bun.lockb" ]      || [ -f "$root/bun.lockb" ];      then pm=bun
+  fi
+  if ! command -v "$pm" >/dev/null 2>&1; then
+    bad "$rel is locked to '$pm' (its lockfile says so) but '$pm' is not on PATH."
+    bad "   Install it, or the gate cannot run this package's checks."
+    fail=1
+    return 0
+  fi
+
   # node_modules is checked per directory, not at the repo root. A monorepo with
   # apps/web/node_modules and nothing at the root used to skip every JS suite.
   if [ ! -d "$dir/node_modules" ] && [ ! -d "$root/node_modules" ]; then
     bad "$rel has a package.json but no installed dependencies -- its suite cannot run."
-    bad "   Run 'npm install' in $rel (or at the workspace root)."
+    bad "   Run '$pm install' in $rel (or at the workspace root)."
     fail=1
     return 0
   fi
@@ -190,7 +212,7 @@ check_node() {
   node -e "const p=require('$dir/package.json');process.exit(p.scripts&&p.scripts.build?0:1)" 2>/dev/null && has_build=yes
 
   if [ "$list_only" -eq 1 ]; then
-    say "   would run: $( [ "$has_test" = yes ] && printf 'npm test ' )$( [ "$has_build" = yes ] && printf 'npm run build ' )($rel)"
+    say "   would run ($pm): $( [ "$has_test" = yes ] && printf 'test ' )$( [ "$has_build" = yes ] && printf 'build ' )($rel)"
     [ "$has_test" = no ] && say "   (no 'test' script -- would FAIL)"
     return 0
   fi
@@ -203,28 +225,41 @@ check_node() {
   local s
   for s in lint typecheck; do
     if node -e "const p=require('$dir/package.json');process.exit(p.scripts&&p.scripts['$s']?0:1)" 2>/dev/null; then
-      step "npm run $s ($rel)"
-      ( cd "$dir" && npm run "$s" --silent ) || fail=1
+      step "$pm run $s ($rel)"
+      ( cd "$dir" && "$pm" run "$s" ) || fail=1
       ran=$((ran + 1))
     fi
   done
 
   if [ "$has_test" = yes ]; then
-    step "npm test ($rel)"
-    ( cd "$dir" && npm test --silent ) || fail=1
+    step "$pm test ($rel)"
+    ( cd "$dir" && "$pm" test ) || fail=1
     ran=$((ran + 1))
   else
     # Untested code is the thing the gate exists to stop. A package that declares no
     # test script does not "have no tests to run" -- it has tests nobody wrote.
-    bad "$rel declares no 'test' script, so its code ships unproven."
-    bad "   Add one to $rel/package.json. If this package genuinely has nothing to"
-    bad "   test (config only), say so with:  \"test\": \"echo no tests: config only\""
-    fail=1
+    #
+    # The single exception mirrors AGENTS.md 2a's rule for stubs: it is allowed only if
+    # it has been *explicitly declared* against a follow-up task ID. Set UNTESTED in a
+    # project-local block above, e.g.
+    #     UNTESTED["apps/web"]="T031"
+    # That keeps the gap loud on every single run and attached to a task somebody owns,
+    # which is the opposite of silencing it with a fake "test" script.
+    local declared="${UNTESTED[$rel]:-}"
+    if [ -n "$declared" ]; then
+      bad "$rel has no test suite -- declared, tracked as $declared."
+      bad "   Its behaviour is unproven. This exemption is not a pass; close $declared."
+    else
+      bad "$rel declares no 'test' script, so its code ships unproven."
+      bad "   Write the suite. If it genuinely cannot be written yet, the package is"
+      bad "   BLOCKED, not done: add a task for it and declare it via UNTESTED[\"$rel\"]."
+      fail=1
+    fi
   fi
 
   if [ "$has_build" = yes ]; then
-    step "npm run build ($rel)"
-    ( cd "$dir" && npm run build --silent ) || fail=1
+    step "$pm run build ($rel)"
+    ( cd "$dir" && "$pm" run build ) || fail=1
     ran=$((ran + 1))
   fi
 }
@@ -259,8 +294,11 @@ placeholder_sweep() {
   done
   [ -n "$existing" ] || { say "   nothing to sweep"; return 0; }
 
+  # `XXX` is deliberately NOT in this list. It collides with real data far too often --
+  # ISO 4217's "no currency" code, redacted digits, placeholder hostnames -- and a sweep
+  # that cries wolf gets disabled, which costs more than the few stubs it would catch.
   # shellcheck disable=SC2086
-  if grep -nE '\b(TODO|FIXME|XXX|HACK|NotImplementedError|not implemented)\b' $existing; then
+  if grep -nE '\b(TODO|FIXME|HACK|NotImplementedError|not implemented)\b' $existing; then
     bad "Placeholders found in the code being pushed."
     bad "   A task closed on a stub is BLOCKED, not done (AGENTS.md 2a)."
     bad "   If a stub is genuinely declared by the task, name its follow-up task ID beside it"
