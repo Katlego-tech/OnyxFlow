@@ -1,0 +1,82 @@
+# CI -- the backstop for the local pre-push gate.
+#
+# Runs the SAME scripts/gate.sh the hook runs. Do not add a check here that gate.sh
+# doesn't have -- add it to gate.sh and both triggers get it. A pipeline that has
+# drifted from the local gate teaches people to ignore the local gate.
+#
+# The checks this file used to list by hand (pytest, npm lint/typecheck/test/build)
+# all live in scripts/gate.sh now -- the JS ones in its ONYXFLOW-LOCAL block.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Gate (backend + web)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The placeholder and secret sweeps need the commits being introduced,
+          # not just the tip.
+          fetch-depth: 0
+
+      # PLAN.md pins Python 3.11 and Node 24.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install Python dependencies
+        # Into a root .venv, because that is the first thing gate.sh's
+        # resolve_python() looks for -- so CI resolves its interpreter through
+        # exactly the same branch a developer's machine does.
+        run: |
+          set -euo pipefail
+          python -m venv .venv
+          ./.venv/bin/python -m pip install --upgrade pip
+          ./.venv/bin/python -m pip install -r requirements-dev.txt
+
+      - name: Install web dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Compute the change set
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --name-only --diff-filter=ACM \
+              "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" \
+              > /tmp/changed.txt
+          else
+            before="${{ github.event.before }}"
+            if [ -n "$before" ] && [ "$before" != "0000000000000000000000000000000000000000" ] \
+               && git cat-file -e "$before^{commit}" 2>/dev/null; then
+              git diff --name-only --diff-filter=ACM "$before..${{ github.sha }}" > /tmp/changed.txt
+            else
+              git ls-tree -r --name-only "${{ github.sha }}" > /tmp/changed.txt
+            fi
+          fi
+          echo "$(wc -l < /tmp/changed.txt) file(s) in the change set"
+
+      - name: Run the gate
+        run: bash scripts/gate.sh --changed-files /tmp/changed.txt
