@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from rest_framework.generics import (
+    ListAPIView,
     RetrieveUpdateDestroyAPIView,
     ListCreateAPIView,
 )
@@ -12,8 +13,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 
+from django.contrib.auth import get_user_model
+
 from .models import PlayerProfile, Team, TrainingSession
 from .serializers import (
+    PlayerPublicSerializer,
     PlayerSelfSerializer,
     TeamReadSerializer,
     TeamWriteSerializer,
@@ -26,6 +30,8 @@ from .serializers import (
     UserSerializer,
 )
 from .permissions import IsAdminOrCoach, IsTeamOwner, IsAdminCoachOrAssignedPlayer  # UPDATED
+
+User = get_user_model()
 
 
 class AdminRegisterView(APIView):
@@ -91,6 +97,34 @@ class CurrentUserView(APIView):
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+
+class CoachListView(ListAPIView):
+    """The coaches a team's `current_coach` can be set to.
+
+    Read-only and staff-only: a client needs this to turn a name into the pk
+    `TeamWriteSerializer.current_coach` expects. Players have no use for it and
+    are refused.
+    """
+    permission_classes = [IsAuthenticated, IsAdminOrCoach]
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        return User.objects.filter(role='coach').order_by('username')
+
+
+class PlayerListView(ListAPIView):
+    """The player profiles a squad or a session can be built from.
+
+    Staff-only. Enumerating athletes' profiles is a privacy decision, and the
+    answer here is that only admins and coaches may. A player sees their own
+    profile through `/api/profiles/` and nothing else.
+    """
+    permission_classes = [IsAuthenticated, IsAdminOrCoach]
+    serializer_class = PlayerPublicSerializer
+
+    def get_queryset(self):
+        return PlayerProfile.objects.select_related('user').order_by('user__username')
 
 
 class PlayerProfileView(RetrieveUpdateDestroyAPIView):
