@@ -86,5 +86,8 @@ API accepts the wrong one happily, so `PlayerPicker.test.tsx` pins it.
 ## Seeded data
 
 `cd backend && ../.venv/bin/python manage.py seed_demo` creates a club to look at — 1 admin,
-2 coaches, 9 players, 3 teams of different sizes, 7 sessions of different lengths. Every account's
-password is `OnyxFlow!2026`. The command refuses to run with `DEBUG` off.
+2 coaches, 9 players, 3 teams of different sizes, 7 sessions of different lengths.
+
+Every account shares one password, read from `SEED_DEMO_PASSWORD` and defaulting to
+`changeme-local-demo`. The command prints it when it finishes, and refuses to run with `DEBUG` off —
+these accounts are reachable by anyone who reads the source, so they must never exist anywhere real.

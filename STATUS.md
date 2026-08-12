@@ -40,7 +40,9 @@ _Last updated: 2026-08-12 — by Katlego (via Claude)_
    `chore/kit-gate-realignment`, a branch whose name predates all of it. Branch off it properly and
    land it before anything else; an unpushed working tree is the largest single risk on this board.
 2. Look at the client in a browser (T019) — the one outstanding piece of verification. Run
-   `python manage.py seed_demo`, then `npm run dev`, and sign in as `ada` / `OnyxFlow!2026`.
+   `python manage.py seed_demo`, then `npm run dev`, and sign in as `ada`. The password is
+   whatever `SEED_DEMO_PASSWORD` was set to, defaulting to `changeme-local-demo`; the command
+   prints it either way.
    No Chromium-family browser is installed on this machine; Firefox is.
 3. Work T015–T017 before this is exposed anywhere but localhost.
 4. T018 is a product decision, not a bug: decide what a coach's team list should contain.
