@@ -79,6 +79,20 @@ class PlayerRegisterView(APIView):
         }, status=status.HTTP_201_CREATED)
 
 
+class CurrentUserView(APIView):
+    """Identity and role of the signed-in user.
+
+    The token endpoints return only `access`/`refresh`, so a decoupled client
+    that reloads the page holds a valid token with no way to tell which role it
+    belongs to. This is read-only and self-scoped: it reports on
+    `request.user` and nothing else.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(UserSerializer(request.user).data)
+
+
 class PlayerProfileView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PlayerSelfSerializer

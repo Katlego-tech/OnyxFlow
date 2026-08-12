@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    CurrentUserView,
     PlayerProfileView,
     TeamListCreateView,
     TeamDetailView,
@@ -15,6 +16,8 @@ urlpatterns = [
     path('auth/register/coach/', CoachRegisterView.as_view()),
     path('auth/register/player/', PlayerRegisterView.as_view()),
 
+
+    path('me/', CurrentUserView.as_view(), name='current-user'),
 
     path('profiles/', PlayerProfileView.as_view()),
 
