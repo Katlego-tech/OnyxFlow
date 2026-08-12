@@ -4,6 +4,24 @@
 
 This project is a RESTful API built with Django and Django REST Framework (DRF) designed for organizational administrators, coaches, and athletes to manage teams, schedule training sessions, and track performance metrics. The architecture is fully **decoupled**, making the API the single source of truth for both web and mobile clients. 
 
+The first of those clients — a React SPA — lives in [`apps/web/`](apps/web/). Start there for how to
+run it; its design doc is [`docs/design/web.md`](docs/design/web.md).
+
+## Repository map
+
+| Path | What |
+| --- | --- |
+| `backend/` | the Django project and the `api` app — the entire domain |
+| `apps/web/` | the React client (Vite · React 19 · Tailwind 4 · shadcn/ui) |
+| `AGENTS.md` · `CLAUDE.md` | how anyone working here, human or AI, is expected to work |
+| `STATUS.md` | the live board — read it first, it's the honest state of the project |
+| `SPEC.md` · `PLAN.md` · `TASKS.md` | what we're building, how, and the task list |
+| `docs/` | topic docs and the per-lane design documents |
+
+> **Before trusting the endpoint tables below:** they describe the intent. Where this README and
+> `backend/api/` disagree, the code wins — the differences found so far are listed in
+> `docs/design/web.md` §6 and tracked in `TASKS.md` T015–T018.
+
 ---
 
 ## Project Goals and Technical Focus
@@ -85,7 +103,10 @@ All data endpoints require a JWT **Access Token** in the `Authorization` header:
 
 | Resource | Method | Endpoint | Admin/Coach Access | Player Access |
 | :--- | :--- | :--- | :--- | :--- |
-| **Profile** | `GET/PATCH` | `/api/profiles/` | View/Update only own profile. | **View/Update only own profile.** |
+| **Identity** | `GET` | `/api/me/` | Own `{id, username, role}`. | Own `{id, username, role}`. |
+| **Coaches** | `GET` | `/api/coaches/` | Every coach, for assignment. | Denied (403). |
+| **Players** | `GET` | `/api/players/` | Every player profile, for squad building. | Denied (403). |
+| **Profile** | `GET/PATCH` | `/api/profiles/` | 404 — only Players have a profile. | **View/Update only own profile.** |
 | **Teams** | `POST/GET` | `/api/teams/` | Full CRUD. | `GET` only teams player is assigned to. |
 | **Teams** | `GET/PATCH/DEL`| `/api/teams/{id}/` | **Only if team `admin_owner`.** | Denied (Read access handled by list view). |
 | **Training** | `POST/GET` | `/api/trainings/` | Full CRUD. | `GET` only sessions player is assigned to. |
@@ -99,8 +120,24 @@ The project includes a robust integration test script (`api_test.py`) to verify 
 
 ### Run Tests
 
+The unit suite runs from the repo root and needs no server:
+
 ```bash
-python api_test.py
+uv venv .venv
+VIRTUAL_ENV=.venv uv pip install -r requirements-dev.txt
+.venv/bin/python -m pytest
+```
+
+The integration script drives a **running** server, so start `runserver` first:
+
+```bash
+cd backend && python api_test.py
+```
+
+The web client's suite lives with it:
+
+```bash
+cd apps/web && npm test
 ```
 
 ### Key Security Verifications
