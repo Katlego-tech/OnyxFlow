@@ -71,7 +71,10 @@ class PlayerPublicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PlayerProfile
-        fields = ['user', 'rating', 'team_name']
+        # `id` is the PlayerProfile pk, which is what the `players` write fields
+        # below expect. Without it a client could render a squad but not edit it:
+        # it only ever saw `user.id`, which is a different key.
+        fields = ['id', 'user', 'rating', 'team_name']
 
 
 class TeamReadSerializer(serializers.ModelSerializer):

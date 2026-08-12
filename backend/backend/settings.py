@@ -21,9 +21,15 @@ ALLOWED_HOSTS = ["*"]
 # settings.py
 
 REST_FRAMEWORK = {
+    # JWT is listed first deliberately. DRF derives the status code for an
+    # unauthenticated request from the *first* authentication class: with
+    # SessionAuthentication leading, a missing or expired Bearer token came back
+    # as 403, indistinguishable from a genuine role denial. JWT-first returns
+    # 401 there, which is what lets the SPA tell "refresh the token" apart from
+    # "this role may not do that". No permission check changes.
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
         # 'rest_framework.renderers.BrowsableAPIRenderer',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
