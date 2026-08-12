@@ -268,6 +268,16 @@ Each user-story phase is ordered **Design → Tests FIRST (must FAIL) → Implem
                literal outside `index.css`; the design doc records the direction as brief-specified
                rather than invented.
 
+- [ ] T023 [SET] Make the pre-push gate check the *committed* tree, not the working tree.
+      Design:  none — one change to scripts/gate.sh
+      Files:   scripts/gate.sh
+      Contract:the client checks run against `git archive HEAD` (or an equivalent clean export)
+               rather than the working directory
+      Verify:  delete a tracked source file from the index but leave it on disk; the gate must fail
+      Done:    a file that exists locally and is not in the repository fails the gate rather than
+               passing it. This is not hypothetical: `.gitignore` swallowed `apps/web/src/lib/`,
+               the gate passed against the working tree, and CI caught it only after the merge.
+
 - [ ] T019 [POL] Give `apps/web` a visual pass in a real browser at 375px and 1440px, in both token
       sets, against docs/design/web.md §2.1. The client has been verified by build, unit tests and
       live API calls, but not yet looked at. `python manage.py seed_demo` provides the data (T022).
