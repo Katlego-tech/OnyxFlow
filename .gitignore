@@ -219,3 +219,12 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+
+# `lib/` in the Python section above is unanchored, so it matches at *any*
+# depth — including apps/web/src/lib/, which it silently swallowed. `git add`
+# says nothing when it skips an ignored path, so the client was pushed without
+# its own API client and typecheck only failed once CI built from a clean
+# checkout. Anchoring `lib/` to the repo root would be the tidier fix but would
+# also stop ignoring a Python build dir in any future sub-package, so the
+# exception is scoped to the one directory that needs it.
+!apps/web/src/lib/
