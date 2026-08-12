@@ -30,22 +30,19 @@ _Last updated: 2026-08-12 — by Katlego (via Claude)_
 
 | Lane | Owner | AI | Status |
 |------|-------|----|--------|
-| `web` | Katlego | Claude | ✅ built — T001–T014, T020–T022 done; unverified in a browser (T019) |
+| `web` | Katlego | Claude | ✅ merged to `main` (PR #1, #2) — T001–T014, T020–T023 done; unverified in a browser (T019) |
 | `api` | — | — | free — T015–T018 open (all hardening) |
 | `docs` | — | — | free |
 
 ## ⏭️ Next action
 
-1. **Commit.** The whole of this work is still uncommitted — 24 paths in `git status --short`, on
-   `chore/kit-gate-realignment`, a branch whose name predates all of it. Branch off it properly and
-   land it before anything else; an unpushed working tree is the largest single risk on this board.
-2. Look at the client in a browser (T019) — the one outstanding piece of verification. Run
+1. Look at the client in a browser (T019) — the one outstanding piece of verification. Run
    `python manage.py seed_demo`, then `npm run dev`, and sign in as `ada`. The password is
    whatever `SEED_DEMO_PASSWORD` was set to, defaulting to `changeme-local-demo`; the command
    prints it either way.
    No Chromium-family browser is installed on this machine; Firefox is.
-3. Work T015–T017 before this is exposed anywhere but localhost.
-4. T018 is a product decision, not a bug: decide what a coach's team list should contain.
+2. Work T015–T017 before this is exposed anywhere but localhost.
+3. T018 is a product decision, not a bug: decide what a coach's team list should contain.
 
 ## 🗓️ Timeline to `TBD`
 
@@ -146,3 +143,14 @@ _Last updated: 2026-08-12 — by Katlego (via Claude)_
 - 2026-08-12 — Katlego (via Claude) — T020: ran the placeholder sweep. Clean; the single bare `pass`
   is a deliberate exception swallow in `signals.py`. Re-ran both suites on picking the work back up —
   20 backend, 29 frontend, still green. Nothing has been committed yet; that is now next action #1.
+- 2026-08-12 — Katlego (via Claude) — Landed the whole session as PR #1 (8 commits). The push was
+  blocked first time by the gate's secret sweep over `seed_demo`'s hardcoded password; it now reads
+  `SEED_DEMO_PASSWORD`, defaulting to `changeme-local-demo`. Rewrote the unpushed commits so no
+  working password entered history.
+- 2026-08-12 — Katlego (via Claude) — PR #2: `.gitignore`'s unanchored `lib/` (from the Python
+  template) had silently swallowed `apps/web/src/lib/`. The gate passed locally because it reads the
+  working tree; CI failed from a clean checkout with ~90 TS2307 errors and `api.test.ts` absent.
+- 2026-08-12 — Katlego (via Claude) — T023: added `unversioned_sweep` to `scripts/gate.sh`, so the
+  gate fails on source that is on disk but not in the repository. Verified by reproducing the PR #2
+  incident in a throwaway clone: typecheck, 29 tests and build all stay green there, and only the
+  new sweep catches it.

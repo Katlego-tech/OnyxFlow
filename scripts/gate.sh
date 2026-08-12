@@ -381,6 +381,83 @@ secret_sweep() {
   ran=$((ran + 1))
 }
 
+# --------------------------------------------------- unversioned sources ----
+# T023. Every other check in this file reads the working tree, so a source file
+# that exists on disk and NOT in the repository is invisible to all of them.
+#
+# This is not hypothetical. The Python .gitignore this repo started from ignores
+# `lib/` unanchored, so it matched apps/web/src/lib/ as well; `git add` skipped
+# six files without a word, this gate went green against the working tree, and
+# CI -- which builds from a clean checkout -- failed with ~90 TS2307 errors and
+# three test files collecting zero tests.
+#
+# The obvious fix is to run every check against `git archive HEAD` instead. That
+# is strictly more correct and was rejected on purpose: it means a fresh `npm ci`
+# and a fresh venv on every single push, and a gate slow enough to be irritating
+# is a gate people start passing --no-verify to. So this asks the one question
+# that actually separates the two trees -- is there source here the repository
+# does not have? -- and answers it in milliseconds.
+#
+# Two ways that happens, both caught:
+#   ignored   -- a .gitignore pattern matched source it was never meant to
+#   untracked -- the file was written and never added
+unversioned_sweep() {
+  step "unversioned source sweep"
+
+  local src_ext='\.(py|ts|tsx|js|jsx|mjs|cjs|go|rs|java|rb|php|c|cc|cpp|h|hpp|cs|kt|swift|vue|svelte)$'
+  # Ignored on purpose: build output, vendored trees, caches, virtualenvs. Note
+  # `migrations` is deliberately absent -- Django migrations are source and a
+  # missing one breaks the next deploy, which is exactly what this looks for.
+  local expected='(^|/)(node_modules|bower_components|vendor|dist|build|out|coverage|htmlcov|\.next|\.nuxt|target|__pycache__|\.venv|venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|\.tox|\.eggs|[^/]*\.egg-info)/?$'
+
+  local entry found hits=0 ignored="" untracked=""
+
+  # --directory collapses a wholly-ignored directory into a single entry, which
+  # keeps this cheap standing next to a 30,000-file node_modules.
+  while IFS= read -r entry; do
+    [ -n "$entry" ] || continue
+    printf '%s\n' "$entry" | grep -qE "$expected" && continue
+    if [ -d "$root/$entry" ]; then
+      found="$(find "$root/$entry" -type f 2>/dev/null | sed "s|^$root/||" | grep -E "$src_ext" || true)"
+    else
+      found="$(printf '%s\n' "$entry" | grep -E "$src_ext" || true)"
+    fi
+    [ -n "$found" ] && ignored="$ignored$found"$'\n'
+  done < <(git ls-files --others --ignored --exclude-standard --directory 2>/dev/null)
+
+  while IFS= read -r entry; do
+    [ -n "$entry" ] || continue
+    printf '%s\n' "$entry" | grep -qE "$expected" && continue
+    found="$(printf '%s\n' "$entry" | grep -E "$src_ext" || true)"
+    [ -n "$found" ] && untracked="$untracked$found"$'\n'
+  done < <(git ls-files --others --exclude-standard 2>/dev/null)
+
+  if [ -n "$(printf '%s' "$ignored" | tr -d '[:space:]')" ]; then
+    bad "   .gitignore is excluding source files from the repository:"
+    printf '%s' "$ignored" | sed '/^$/d;s/^/     /'
+    bad "   These exist on your disk, so every check above passed on them. They are"
+    bad "   not in the repo, so a clean checkout does not have them and CI will fail."
+    bad "   Find the offending rule with: git check-ignore -v <path>"
+    hits=1
+  fi
+
+  if [ -n "$(printf '%s' "$untracked" | tr -d '[:space:]')" ]; then
+    bad "   source files are not tracked and will not reach the remote:"
+    printf '%s' "$untracked" | sed '/^$/d;s/^/     /'
+    bad "   git add them, or ignore them deliberately if they are scratch work."
+    hits=1
+  fi
+
+  # A local counter, not the global `fail` -- reading `fail` here would let an
+  # earlier failing check suppress this one's "clean" and misreport what ran.
+  if [ "$hits" -ne 0 ]; then
+    fail=1
+  else
+    say "   clean"
+  fi
+  ran=$((ran + 1))
+}
+
 # ------------------------------------------------------------------ run -----
 say "== gate: $(git rev-parse --abbrev-ref HEAD) @ $(git rev-parse --short HEAD) =="
 
@@ -393,6 +470,7 @@ done < <(project_dirs)
 
 placeholder_sweep
 secret_sweep
+unversioned_sweep
 
 if [ "$list_only" -eq 1 ]; then
   say ""
